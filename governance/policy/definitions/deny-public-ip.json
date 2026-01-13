@@ -1,0 +1,19 @@
+{
+  "properties": {
+    "displayName": "Deny Public IP resources",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Prevents creation of Public IP resources to reduce unintended internet exposure in regulated environments.",
+    "metadata": { "category": "Network" },
+    "parameters": {},
+    "policyRule": {
+      "if": {
+        "field": "type",
+        "equals": "Microsoft.Network/publicIPAddresses"
+      },
+      "then": {
+        "effect": "Deny"
+      }
+    }
+  }
+}
