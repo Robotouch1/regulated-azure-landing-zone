@@ -1,0 +1,24 @@
+{
+  "properties": {
+    "displayName": "Allowed locations (regulated baseline)",
+    "policyType": "Custom",
+    "mode": "All",
+    "description": "Restricts resource deployment to approved regions to support data residency and compliance expectations.",
+    "metadata": { "category": "Governance" },
+    "parameters": {
+      "listOfAllowedLocations": {
+        "type": "Array",
+        "metadata": { "displayName": "Allowed locations" }
+      }
+    },
+    "policyRule": {
+      "if": {
+        "not": {
+          "field": "location",
+          "in": "[parameters('listOfAllowedLocations')]"
+        }
+      },
+      "then": { "effect": "Deny" }
+    }
+  }
+}
