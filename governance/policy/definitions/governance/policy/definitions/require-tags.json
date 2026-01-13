@@ -1,0 +1,31 @@
+{
+  "properties": {
+    "displayName": "Require common resource tags",
+    "policyType": "Custom",
+    "mode": "Indexed",
+    "description": "Requires owner, environment, and dataClassification tags for auditability and asset governance.",
+    "metadata": { "category": "Governance" },
+    "parameters": {
+      "tagNames": {
+        "type": "Array",
+        "metadata": { "displayName": "Required tag names" },
+        "defaultValue": ["owner", "environment", "dataClassification"]
+      }
+    },
+    "policyRule": {
+      "if": {
+        "allOf": [
+          { "field": "type", "notEquals": "Microsoft.Resources/subscriptions/resourceGroups" },
+          {
+            "anyOf": [
+              { "field": "tags['owner']", "exists": "false" },
+              { "field": "tags['environment']", "exists": "false" },
+              { "field": "tags['dataClassification']", "exists": "false" }
+            ]
+          }
+        ]
+      },
+      "then": { "effect": "Deny" }
+    }
+  }
+}
