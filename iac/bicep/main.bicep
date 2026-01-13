@@ -18,3 +18,12 @@ resource law 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 }
 
 output logAnalyticsWorkspaceId string = law.id
+// ------------------------------
+// Regulated baseline policy assignment
+// ------------------------------
+module baselineAssign './policy-assignment.bicep' = {
+  name: 'baselineAssign'
+  params: {
+    policySetDefinitionId: '<REPLACE_AT_DEPLOY_TIME>'
+  }
+}
