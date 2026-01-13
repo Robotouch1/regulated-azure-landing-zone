@@ -1,0 +1,38 @@
+{
+  "properties": {
+    "displayName": "Regulated Baseline (Aerospace-style) - Core Guardrails",
+    "policyType": "Custom",
+    "description": "Core guardrails for regulated environments: reduce public exposure, enforce governance tags, and restrict regions. Supports controlled exemptions.",
+    "metadata": { "category": "Regulatory Baseline" },
+    "parameters": {
+      "allowedLocations": {
+        "type": "Array",
+        "metadata": { "displayName": "Allowed locations" },
+        "defaultValue": ["eastus", "eastus2"]
+      },
+      "requiredTagNames": {
+        "type": "Array",
+        "metadata": { "displayName": "Required tag names" },
+        "defaultValue": ["owner", "environment", "dataClassification"]
+      }
+    },
+    "policyDefinitions": [
+      {
+        "policyDefinitionId": "<PUT_DEFINITION_RESOURCE_ID_HERE_DENY_PUBLIC_IP>",
+        "parameters": {}
+      },
+      {
+        "policyDefinitionId": "<PUT_DEFINITION_RESOURCE_ID_HERE_REQUIRE_TAGS>",
+        "parameters": {
+          "tagNames": { "value": "[parameters('requiredTagNames')]" }
+        }
+      },
+      {
+        "policyDefinitionId": "<PUT_DEFINITION_RESOURCE_ID_HERE_ALLOWED_LOCATIONS>",
+        "parameters": {
+          "listOfAllowedLocations": { "value": "[parameters('allowedLocations')]" }
+        }
+      }
+    ]
+  }
+}
