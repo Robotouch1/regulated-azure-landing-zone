@@ -1,0 +1,8 @@
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where tolower(OperationNameValue) == "microsoft.authorization/roleassignments/write"
+| extend props = parse_json(Properties)
+| extend entity = tostring(props.entity)
+| where entity startswith "/subscriptions/"
+| project TimeGenerated, SubscriptionId, Caller, ActivityStatusValue, entity, CorrelationId
+| order by TimeGenerated desc
