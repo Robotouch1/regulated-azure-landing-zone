@@ -1,0 +1,8 @@
+AzureActivity
+| where TimeGenerated > ago(2h)
+| where tolower(OperationNameValue) in (
+    "microsoft.insights/diagnosticsettings/write",
+    "microsoft.insights/diagnosticsettings/delete"
+)
+| project TimeGenerated, OperationNameValue, Caller, SubscriptionId, ResourceId, Properties
+| order by TimeGenerated desc
