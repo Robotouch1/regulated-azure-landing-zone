@@ -1,0 +1,11 @@
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where tolower(OperationNameValue) in (
+    "microsoft.authorization/policyexemptions/write",
+    "microsoft.authorization/policyexemptions/delete"
+)
+| extend props = parse_json(Properties)
+| extend exemptionName = tostring(props.exemptionName)
+| extend scope = tostring(props.scope)
+| project TimeGenerated, SubscriptionId, Caller, OperationNameValue, exemptionName, scope
+| order by TimeGenerated desc
