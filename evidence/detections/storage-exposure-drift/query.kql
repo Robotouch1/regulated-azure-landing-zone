@@ -1,0 +1,8 @@
+let lookback = 24h;
+AzureActivity
+| where TimeGenerated > ago(lookback)
+| where ResourceProviderValue == "MICROSOFT.STORAGE"
+| where OperationNameValue has "MICROSOFT.STORAGE/STORAGEACCOUNTS/WRITE"
+| extend props = parse_json(Properties)
+| project TimeGenerated, SubscriptionId, Caller, OperationNameValue, ResourceId, Properties
+| order by TimeGenerated desc
