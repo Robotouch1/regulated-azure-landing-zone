@@ -1,0 +1,44 @@
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where ActivityStatusValue =~ "Success"
+| where tolower(OperationNameValue) has "microsoft.network/networksecuritygroups/securityrules/"
+| extend props = parse_json(Properties)
+| extend entity = tostring(props.entity)
+| extend payload =
+    coalesce(
+        tostring(props.requestbody),
+        tostring(props.requestBody),
+        tostring(props.responseBody),
+        tostring(props.statusMessage)
+    )
+| where entity has "/providers/Microsoft.Network/networkSecurityGroups/" or ResourceId has "/providers/Microsoft.Network/networkSecurityGroups/"
+//
+// Risk filters (string-based, resilient)
+//
+| where payload has_any ("\"direction\":\"Inbound\"", "\"direction\": \"Inbound\"")
+| where payload has_any ("\"access\":\"Allow\"", "\"access\": \"Allow\"")
+| where payload has_any (
+    "\"sourceAddressPrefix\":\"*\"",
+    "\"sourceAddressPrefix\":\"0.0.0.0/0\"",
+    "\"sourceAddressPrefix\": \"*\"",
+    "\"sourceAddressPrefix\": \"0.0.0.0/0\"",
+    "\"sourceAddressPrefixes\":[\"*\"]",
+    "\"sourceAddressPrefixes\": [\"*\"]",
+    "\"sourceAddressPrefix\":\"Internet\"",
+    "\"sourceAddressPrefix\": \"Internet\""
+)
+| where payload has_any (
+    "\"destinationPortRange\":\"22\"",
+    "\"destinationPortRange\":\"3389\"",
+    "\"destinationPortRange\":\"80\"",
+    "\"destinationPortRange\":\"443\"",
+    "\"destinationPortRange\":\"*\"",
+    "\"destinationPortRanges\":[\"22\"",
+    "\"destinationPortRanges\": [\"22\"",
+    "\"destinationPortRanges\":[\"3389\"",
+    "\"destinationPortRanges\": [\"3389\"",
+    "\"destinationPortRanges\":[\"*\"",
+    "\"destinationPortRanges\": [\"*\""
+)
+| project TimeGenerated, SubscriptionId, Caller, OperationNameValue, entity, payload
+| order by TimeGenerated desc
