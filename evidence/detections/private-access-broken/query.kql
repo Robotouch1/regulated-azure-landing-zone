@@ -1,0 +1,15 @@
+AzureActivity
+| where TimeGenerated > ago(24h)
+| where tolower(OperationNameValue) == "microsoft.storage/storageaccounts/write"
+| extend props = parse_json(Properties)
+| extend rb = parse_json(tostring(props.responseBody))
+| extend publicNetworkAccess = tostring(rb.properties.publicNetworkAccess)
+| where publicNetworkAccess == "Enabled"
+| project
+    TimeGenerated,
+    SubscriptionId,
+    Caller,
+    ResourceId,
+    publicNetworkAccess,
+    ActivityStatusValue
+| order by TimeGenerated desc
