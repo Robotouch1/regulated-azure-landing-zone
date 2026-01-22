@@ -1,3 +1,23 @@
+## How to Read This Repository
+
+This repository is organized around **security architecture patterns**, not individual Azure features.
+
+**Recommended reading order:**
+1. `architecture/protected-workload-zone.md`  
+   → Explains the security intent, trust boundaries, and threat model.
+2. `logging/`  
+   → Shows how centralized control-plane visibility is established.
+3. `governance/`  
+   → Documents guardrails, assumptions, and policy decisions.
+4. `docs/detections/` (or wherever your KQL lives)  
+   → Implements detection logic for posture drift and privilege risk.
+5. `evidence/`  
+   → Screenshots and artifacts proving incidents fired and were investigated.
+
+The goal is to demonstrate **how a senior security engineer designs, reasons about, and validates security controls** in a regulated cloud environment — without exposing employer-specific details.
+
+
+
 # Regulated Azure Landing Zone (Security-First)
 
 This repository presents a security-first Azure Landing Zone blueprint designed for regulated enterprise environments (e.g., aerospace/industrial). It focuses on governance, identity boundaries, centralized logging, threat detection, and audit-ready control evidence — while remaining NDA-safe and vendor-aligned.
