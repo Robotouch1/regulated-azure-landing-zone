@@ -1,0 +1,27 @@
+devops-change-control/
+  README.md
+  architecture/
+    devops-threat-model.md
+    change-control-architecture.md
+  policies/
+    pwz-deny-internet-inbound.json
+    deny-public-storage.json
+  pipelines/
+    azure-pipelines.yml
+  bicep/
+    main.bicep
+    modules/
+      nsg-rules.bicep
+      storage.bicep
+  sentinel/
+    analytics/
+      policy-exemption-change.kql
+      denied-deployment.kql
+      pipeline-identity-usage.kql
+  defender/
+    configuration.md
+  evidence/
+    01-policy-deny/
+    02-policy-exemption/
+    03-denied-deploy-detection/
+    04-successful-safe-change/
