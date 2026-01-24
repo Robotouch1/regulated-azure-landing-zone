@@ -10,4 +10,4 @@ A scheduled analytics rule creates an incident when policy denies automated depl
 - kql-results-policy-deny.png
 - sentinel-rule-config.png
 - sentinel-incident-created.png
-- incident-details-entities.png
+
