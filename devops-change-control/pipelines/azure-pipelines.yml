@@ -5,6 +5,7 @@ variables:
   rg_protected: 'rg-prod-test'
   st_protected: 'stsecdiagtest'
   agentPool: 'self-hosted-local'
+  templatePath: 'bicep/main.bicep'
 
 stages:
 - stage: WhatIf
@@ -15,6 +16,22 @@ stages:
     pool:
       name: $(agentPool)
     steps:
+    - checkout: self
+      clean: true
+
+    - script: |
+        set -euo pipefail
+        echo "Build.SourcesDirectory = $(Build.SourcesDirectory)"
+        echo "Listing repo root:"
+        ls -la "$(Build.SourcesDirectory)"
+        echo ""
+        echo "Find main.bicep:"
+        find "$(Build.SourcesDirectory)" -maxdepth 4 -name "main.bicep" -print || true
+        echo ""
+        echo "List bicep folder (if exists):"
+        ls -la "$(Build.SourcesDirectory)/bicep" || true
+      displayName: "Debug: verify repo files exist"
+
     - task: AzureCLI@2
       displayName: "What-if (preview changes)"
       inputs:
@@ -32,9 +49,12 @@ stages:
           echo "Azure account context:"
           az account show --query "{name:name, id:id, tenantId:tenantId}" -o json
 
+          TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
+          echo "Using template: $TEMPLATE"
+
           az deployment group what-if \
             --resource-group "$(rg_protected)" \
-            --template-file "bicep/main.bicep" \
+            --template-file "$TEMPLATE" \
             --parameters storageName="$(st_protected)" publicNetworkAccess="Enabled" allowBlobPublicAccess=true
 
 - stage: Deploy
@@ -47,6 +67,9 @@ stages:
     pool:
       name: $(agentPool)
     steps:
+    - checkout: self
+      clean: true
+
     - task: AzureCLI@2
       displayName: "Deploy (expected policy deny)"
       inputs:
@@ -60,7 +83,10 @@ stages:
           echo "Deploying to RG: $(rg_protected)"
           echo "Storage: $(st_protected)"
 
+          TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
+          echo "Using template: $TEMPLATE"
+
           az deployment group create \
             --resource-group "$(rg_protected)" \
-            --template-file "bicep/main.bicep" \
+            --template-file "$TEMPLATE" \
             --parameters storageName="$(st_protected)" publicNetworkAccess="Enabled" allowBlobPublicAccess=true
