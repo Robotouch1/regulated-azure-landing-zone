@@ -6,6 +6,10 @@ variables:
   rg_protected: 'rg-prod-test'
   st_protected: 'stsecdiagtest'
 
+  # IMPORTANT: because your repo is "regulated-azure-landing-zone"
+  # and the project lives under "devops-change-control/..."
+  templatePath: 'devops-change-control/bicep/main.bicep'
+
 stages:
 - stage: WhatIf
   displayName: What-If
@@ -36,9 +40,9 @@ stages:
           echo "Azure account context:"
           az account show --query "{name:name, id:id, tenantId:tenantId}" -o json
 
-          TEMPLATE="$(Build.SourcesDirectory)/bicep/main.bicep"
+          TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
           echo "Using template: $TEMPLATE"
-          ls -la "$(Build.SourcesDirectory)/bicep" || true
+          ls -la "$(Build.SourcesDirectory)/devops-change-control/bicep" || true
 
           az deployment group what-if \
             --resource-group "$(rg_protected)" \
@@ -72,7 +76,7 @@ stages:
           echo "Deploying to RG: $(rg_protected)"
           echo "Storage: $(st_protected)"
 
-          TEMPLATE="$(Build.SourcesDirectory)/bicep/main.bicep"
+          TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
           echo "Using template: $TEMPLATE"
 
           az deployment group create \
