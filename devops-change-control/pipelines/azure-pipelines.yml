@@ -1,0 +1,51 @@
+trigger: none
+
+variables:
+  azureServiceConnection: 'sc-prod-deployer'
+  rg_protected: 'rg-prod-test'
+  st_protected: 'stsecdiagtest'
+
+stages:
+- stage: WhatIf
+  displayName: What-If
+  jobs:
+  - job: whatif
+    displayName: What-If Deployment
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureCLI@2
+      displayName: What-if (preview changes)
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          echo "Target RG: $(rg_protected)"
+          echo "Storage: $(st_protected)"
+
+          az deployment group what-if \
+            --resource-group "$(rg_protected)" \
+            --template-file bicep/main.bicep \
+            --parameters storageName="$(st_protected)" publicNetworkAccess="Enabled" allowBlobPublicAccess=true
+
+- stage: Deploy
+  displayName: Deploy
+  dependsOn: WhatIf
+  jobs:
+  - job: deploy
+    displayName: Deploy (attempt forbidden change)
+    pool:
+      vmImage: 'ubuntu-latest'
+    steps:
+    - task: AzureCLI@2
+      displayName: Deploy (expected to be denied by policy)
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az deployment group create \
+            --resource-group "$(rg_protected)" \
+            --template-file bicep/main.bicep \
+            --parameters storageName="$(st_protected)" publicNetworkAccess="Enabled" allowBlobPublicAccess=true
