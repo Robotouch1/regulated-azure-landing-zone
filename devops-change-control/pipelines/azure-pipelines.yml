@@ -1,7 +1,7 @@
 trigger: none
 
 variables:
-  azureServiceConnection: 'sc-prod-deployer'
+  azureServiceConnection: 'sc-prod-deployer1'
   rg_protected: 'rg-prod-test'
   st_protected: 'stsecdiagtest'
   agentPool: 'self-hosted-local'
