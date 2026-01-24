@@ -5,17 +5,14 @@ variables:
   azureServiceConnection: 'sc-prod-deployer1'
   rg_protected: 'rg-prod-test'
   st_protected: 'stsecdiagtest'
-
-  # IMPORTANT: because your repo is "regulated-azure-landing-zone"
-  # and the project lives under "devops-change-control/..."
   templatePath: 'devops-change-control/bicep/main.bicep'
 
 stages:
 - stage: WhatIf
-  displayName: What-If
+  displayName: What-If (advisory)
   jobs:
   - job: whatif
-    displayName: What-If Deployment
+    displayName: What-If Deployment (should not block)
     pool:
       name: $(agentPool)
     steps:
@@ -23,39 +20,46 @@ stages:
       clean: true
 
     - task: AzureCLI@2
-      displayName: "What-if (preview changes)"
+      displayName: "What-if (preview changes) — continue even if denied"
       inputs:
         azureSubscription: $(azureServiceConnection)
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
-          set -euo pipefail
+          set -uo pipefail
 
           echo "Agent: $AGENT_NAME"
           echo "Build.SourcesDirectory: $(Build.SourcesDirectory)"
           echo "Target RG: $(rg_protected)"
           echo "Storage: $(st_protected)"
 
-          az --version
-          echo "Azure account context:"
-          az account show --query "{name:name, id:id, tenantId:tenantId}" -o json
-
           TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
           echo "Using template: $TEMPLATE"
-          ls -la "$(Build.SourcesDirectory)/devops-change-control/bicep" || true
 
+          # Run what-if, but DO NOT fail the stage if policy denies
+          set +e
           az deployment group what-if \
             --resource-group "$(rg_protected)" \
             --template-file "$TEMPLATE" \
             --parameters storageName="$(st_protected)" publicNetworkAccess="Enabled" allowBlobPublicAccess=true
+          RC=$?
+          set -e
+
+          if [ $RC -ne 0 ]; then
+            echo "WARNING: what-if returned exit code $RC (likely policy deny). Continuing pipeline by design."
+          else
+            echo "What-if succeeded."
+          fi
+
+          exit 0
 
 - stage: Deploy
-  displayName: Deploy
+  displayName: Deploy (enforced)
   dependsOn: WhatIf
   condition: succeeded()
   jobs:
   - job: deploy
-    displayName: Deploy (expected to be denied by policy)
+    displayName: Deploy (expected policy deny)
     pool:
       name: $(agentPool)
     steps:
