@@ -1,11 +1,10 @@
 trigger: none
 
 variables:
-  azureServiceConnection: 'sc-prod-deployer1'
+  agentPool: 'self-hosted-local'
+  azureServiceConnection: 'sc-prod-workload-deployer1'
   rg_protected: 'rg-prod-test'
   st_protected: 'stsecdiagtest'
-  agentPool: 'self-hosted-local'
-  templatePath: 'bicep/main.bicep'
 
 stages:
 - stage: WhatIf
@@ -19,19 +18,6 @@ stages:
     - checkout: self
       clean: true
 
-    - script: |
-        set -euo pipefail
-        echo "Build.SourcesDirectory = $(Build.SourcesDirectory)"
-        echo "Listing repo root:"
-        ls -la "$(Build.SourcesDirectory)"
-        echo ""
-        echo "Find main.bicep:"
-        find "$(Build.SourcesDirectory)" -maxdepth 4 -name "main.bicep" -print || true
-        echo ""
-        echo "List bicep folder (if exists):"
-        ls -la "$(Build.SourcesDirectory)/bicep" || true
-      displayName: "Debug: verify repo files exist"
-
     - task: AzureCLI@2
       displayName: "What-if (preview changes)"
       inputs:
@@ -42,6 +28,7 @@ stages:
           set -euo pipefail
 
           echo "Agent: $AGENT_NAME"
+          echo "Build.SourcesDirectory: $(Build.SourcesDirectory)"
           echo "Target RG: $(rg_protected)"
           echo "Storage: $(st_protected)"
 
@@ -49,8 +36,9 @@ stages:
           echo "Azure account context:"
           az account show --query "{name:name, id:id, tenantId:tenantId}" -o json
 
-          TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
+          TEMPLATE="$(Build.SourcesDirectory)/bicep/main.bicep"
           echo "Using template: $TEMPLATE"
+          ls -la "$(Build.SourcesDirectory)/bicep" || true
 
           az deployment group what-if \
             --resource-group "$(rg_protected)" \
@@ -80,10 +68,11 @@ stages:
           set -euo pipefail
 
           echo "Agent: $AGENT_NAME"
+          echo "Build.SourcesDirectory: $(Build.SourcesDirectory)"
           echo "Deploying to RG: $(rg_protected)"
           echo "Storage: $(st_protected)"
 
-          TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
+          TEMPLATE="$(Build.SourcesDirectory)/bicep/main.bicep"
           echo "Using template: $TEMPLATE"
 
           az deployment group create \
