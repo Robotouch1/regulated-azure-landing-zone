@@ -1,0 +1,33 @@
+- stage: Deploy
+  displayName: Deploy (Prod - gated)
+  dependsOn: WhatIf
+  condition: succeeded()
+  jobs:
+  - deployment: deploy_prod
+    displayName: Deploy to Production (Approval Required)
+    environment: prod
+    pool:
+      name: self-hosted-local
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - checkout: self
+            clean: true
+
+          - task: AzureCLI@2
+            displayName: "Deploy (post-approval)"
+            inputs:
+              azureSubscription: sc-prod-deployer1
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                set -euo pipefail
+
+                TEMPLATE="$(Build.SourcesDirectory)/devops-change-control/bicep/main.bicep"
+                echo "Deploying with template: $TEMPLATE"
+
+                az deployment group create \
+                  --resource-group rg-prod-test \
+                  --template-file "$TEMPLATE" \
+                  --parameters storageName="stsecdiagtest" publicNetworkAccess="Enabled" allowBlobPublicAccess=true
