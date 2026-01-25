@@ -12,7 +12,7 @@ stages:
   displayName: What-If (advisory)
   jobs:
   - job: whatif
-    displayName: What-If Deployment (should not block)
+    displayName: What-If Deployment (non-blocking)
     pool:
       name: $(agentPool)
     steps:
@@ -29,14 +29,12 @@ stages:
           set -uo pipefail
 
           echo "Agent: $AGENT_NAME"
-          echo "Build.SourcesDirectory: $(Build.SourcesDirectory)"
           echo "Target RG: $(rg_protected)"
           echo "Storage: $(st_protected)"
 
           TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
           echo "Using template: $TEMPLATE"
 
-          # Run what-if, but DO NOT fail the stage if policy denies
           set +e
           az deployment group what-if \
             --resource-group "$(rg_protected)" \
@@ -46,20 +44,37 @@ stages:
           set -e
 
           if [ $RC -ne 0 ]; then
-            echo "WARNING: what-if returned exit code $RC (likely policy deny). Continuing pipeline by design."
+            echo "WARNING: what-if returned exit code $RC (likely policy deny). Continuing by design."
           else
             echo "What-if succeeded."
           fi
 
           exit 0
 
-- stage: Deploy
-  displayName: Deploy (enforced)
+- stage: Approval
+  displayName: Approval Gate (prod)
   dependsOn: WhatIf
   condition: succeeded()
   jobs:
+  - job: approve
+    displayName: Manual approval required
+    pool: server
+    steps:
+    - task: ManualValidation@0
+      inputs:
+        instructions: |
+          Review the What-If output.
+          Approve to proceed with PROD deployment attempt (expected policy deny).
+        onTimeout: reject
+        timeoutInMinutes: 60
+
+- stage: Deploy
+  displayName: Deploy (prod - enforced)
+  dependsOn: Approval
+  condition: succeeded()
+  jobs:
   - job: deploy
-    displayName: Deploy (expected policy deny)
+    displayName: Deploy (post-approval)
     pool:
       name: $(agentPool)
     steps:
@@ -75,11 +90,7 @@ stages:
         inlineScript: |
           set -euo pipefail
 
-          echo "Agent: $AGENT_NAME"
-          echo "Build.SourcesDirectory: $(Build.SourcesDirectory)"
           echo "Deploying to RG: $(rg_protected)"
-          echo "Storage: $(st_protected)"
-
           TEMPLATE="$(Build.SourcesDirectory)/$(templatePath)"
           echo "Using template: $TEMPLATE"
 
