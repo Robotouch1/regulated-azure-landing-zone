@@ -1,56 +1,104 @@
-## How to Read This Repository
+# Regulated Azure Landing Zone  
+**Security Architecture Portfolio (NDA-Safe)**
 
-This repository is organized around **security architecture patterns**, not individual Azure features.
+This repository is a portfolio-grade, NDA-safe Azure security architecture project that reflects the type of work performed by a **Senior Security Engineer / Security Architect** in a regulated enterprise (e.g., aerospace, industrial, or critical infrastructure).
 
-**Recommended reading order:**
-1. `architecture/protected-workload-zone.md`  
-   → Explains the security intent, trust boundaries, and threat model.
-2. `logging/`  
-   → Shows how centralized control-plane visibility is established.
-3. `governance/`  
-   → Documents guardrails, assumptions, and policy decisions.
-4. `docs/detections/` (or wherever your KQL lives)  
-   → Implements detection logic for posture drift and privilege risk.
-5. `evidence/`  
-   → Screenshots and artifacts proving incidents fired and were investigated.
+The focus is **architecture-first security**, not tool demos:
+- guardrails before alerts  
+- intent before automation  
+- evidence before claims  
 
-The goal is to demonstrate **how a senior security engineer designs, reasons about, and validates security controls** in a regulated cloud environment — without exposing employer-specific details.
+No real employer systems, identifiers, or production configurations are used.
 
+---
 
+## How to read this repository
 
-# Regulated Azure Landing Zone (Security-First)
+This repository is organized around **security control objectives**, not timelines or individual Azure services.
 
-This repository presents a security-first Azure Landing Zone blueprint designed for regulated enterprise environments (e.g., aerospace/industrial). It focuses on governance, identity boundaries, centralized logging, threat detection, and audit-ready control evidence — while remaining NDA-safe and vendor-aligned.
+Each top-level folder represents a **complete security story**:
+- what problem is being solved  
+- how the control is designed  
+- how it is validated  
+- what evidence exists  
 
-## What this demonstrates
-- Enterprise-scale Azure governance: management groups, subscription segmentation, RBAC boundaries
-- Security guardrails: policy-as-code, restricted locations, tagging standards, baseline posture
-- Detection readiness: centralized logging strategy, Microsoft Sentinel integration approach
-- Compliance thinking: control mapping, evidence catalog, risk register
-- Architecture judgment: ADRs with tradeoffs and residual risk
+Each folder can be reviewed independently.
 
-## Scope (in)
-- Management group hierarchy & subscription model
-- RBAC model + privileged access approach
-- Policy guardrails (definitions/initiatives/assignments)
-- Logging architecture (Log Analytics + Sentinel strategy)
-- Compliance artifacts (control mapping, evidence catalog, risk register)
-- IaC skeleton (Bicep-based) to deploy guardrails
+---
 
-## Out of scope (not in)
-- Application-specific architecture
-- Real tenant/subscription identifiers or organization-specific naming
-- Production workloads or sensitive configurations
+## Security pillars demonstrated in this repository
 
-## How to navigate
-- Architecture overview: `docs/02-architecture-overview.md`
-- ADRs: `architecture/adr/`
-- Policies: `governance/policy/`
-- Identity/RBAC model: `governance/rbac/`
-- Logging + Sentinel strategy: `logging/`
-- Compliance mapping: `compliance/`
+### 1️⃣ `sentinel-alert/`  
+**Security monitoring & detection architecture**
 
-## Quick start (optional)
-This repo includes reference Bicep modules and policy JSON. It is designed to be adapted to your environment.
-See: `iac/bicep/` and `governance/policy/`
-# regulated-azure-landing-zone
+This folder demonstrates how centralized logging and Microsoft Sentinel are used to detect **high-risk control-plane and network events**, with an emphasis on:
+
+- AzureActivity as a foundational signal
+- High-signal, intent-aware analytics rules
+- Zone-based detection logic (protected workloads vs permitted exposure)
+- Detection of security-relevant drift (RBAC changes, NSG exposure, diagnostic settings tampering)
+
+**What this shows:**  
+Detection engineering grounded in architectural intent, not alert volume.
+
+---
+
+### 2️⃣ `devops-change-control/`  
+**DevSecOps guardrails & production change governance**
+
+This folder demonstrates how **production infrastructure changes** are governed in a regulated Azure environment.
+
+It includes:
+- Infrastructure-as-code deployments via Azure DevOps
+- Manual approval gates for production changes
+- Azure Policy deny controls enforcing platform standards
+- Evidence captured from pipeline runs and policy enforcement
+
+It also contains **architectural investigation material** related to correlating Azure DevOps approvals into SIEM.  
+This material is intentionally documented as **design/attempt**, not a completed control, to transparently capture platform constraints and enterprise-grade next steps.
+
+**What this shows:**  
+Strong understanding of **preventive controls**, change governance, and evidence-driven validation.
+
+---
+
+### 3️⃣ `devops-identity-trust/`  
+**Pipeline identity & trust boundary design**
+
+This folder focuses on the **identity and trust model for CI/CD pipelines**, including:
+
+- How pipelines authenticate to Azure
+- How least-privilege access is enforced
+- How trust boundaries are created between approved and unapproved identities
+
+Where tenant limitations exist (e.g., Conditional Access unavailable in a personal tenant), those constraints are **explicitly documented**, along with the enterprise patterns that would be used in production (Conditional Access, PIM, workload identity federation).
+
+**What this shows:**  
+Pipeline identities are treated as **first-class security principals**, not just deployment plumbing.
+
+---
+
+## What this repository intentionally avoids
+
+- Real employer names, tenants, or subscriptions  
+- Customer data or sensitive telemetry  
+- “Toy” labs without architectural context  
+- Alert spam without a clear control objective  
+
+Everything here is designed to be **reviewable, explainable, and auditable**.
+
+---
+
+## Intended audience
+
+This repository is designed for:
+- Senior cloud security and security architecture interviews
+- Hiring managers evaluating design judgment
+- Architects reviewing preventive controls, detection strategy, and evidence quality
+
+---
+
+## Disclaimer
+
+This repository is for demonstration purposes only.  
+It is not affiliated with Eaton or any other employer and contains no proprietary or confidential information.
